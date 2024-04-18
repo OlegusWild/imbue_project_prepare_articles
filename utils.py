@@ -2,7 +2,7 @@ import os
 import json, jsonlines
 import pathlib
 from urllib.parse import urlparse
-import csv
+from articles_cleaner import get_cleaned_text
 from random import sample
 
 
@@ -150,6 +150,10 @@ def collect_m_texts_by_uuids(path_rel, dt_str, n, m):
 
             with open(f'repr_experiments/{path_rel}/{n}_{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_raw.txt', 'w', encoding='utf-8') as f:
                 f.write(record['text'])
+            
+            # applying a cleaning technique
+            with open(f'repr_experiments/{path_rel}/{n}_{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_clean.txt', 'w', encoding='utf-8') as f:
+                f.write(get_cleaned_text(record['text']))
 
 
 # in MB
