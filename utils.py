@@ -4,6 +4,7 @@ import pathlib
 from urllib.parse import urlparse
 from articles_cleaner import get_cleaned_text
 from random import sample
+from difflib import Differ
 
 
 ROOT_PATH = 'C:/Users/Oleg/imbue_project_prepare_articles'
@@ -153,7 +154,17 @@ def collect_m_texts_by_uuids(path_rel, dt_str, n, m):
             
             # applying a cleaning technique
             with open(f'repr_experiments/{path_rel}/{n}_{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_clean.txt', 'w', encoding='utf-8') as f:
-                f.write(get_cleaned_text(record['text']))
+                clean_text = get_cleaned_text(record['text'])
+                f.write(clean_text)
+            
+            # getting the difference
+            with open(f'repr_experiments/{path_rel}/{n}_{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_diff.txt', 'w', encoding='utf-8') as f:
+                f.writelines(compare_texts(record['text'], clean_text)) 
+
+
+def compare_texts(text1, text2):
+    d = Differ()
+    return list(d.compare(text1.splitlines(1), text2.splitlines(1)))
 
 
 # in MB
@@ -164,7 +175,7 @@ file_num = 1
 
 def write_record(record):
     """
-    Stores extracted data in chunks of specified format
+    Stores extracted and cleaned data in chunks of specified format
     """
     global file_num
 
@@ -173,11 +184,11 @@ def write_record(record):
         writer.write({
             'title': record['title'],
             'url': record['url'],
-            'text': record['text'],
+            'text': get_cleaned_text(record['text']),
             'date_published': record['published'],
             'uuid': record['uuid']
         })
 
-    if os.path.getsize(f'C:/Users/Oleg/Desktop/test_output_{file_num}.jsonl') > RESULT_CHUNK_SIZE_BYTES:
+    if os.path.getsize(f'{ROOT_PATH}/cleaned_data/output_{file_num}.jsonl') > RESULT_CHUNK_SIZE_BYTES:
         file_num += 1
 

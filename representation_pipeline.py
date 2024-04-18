@@ -2,8 +2,8 @@ from datetime import datetime as dt
 from utils import get_jsonl_lines, collect_urls_stat, get_most_frequent, collect_specific_uuids, get_random_samples, collect_m_texts_by_uuids
 
 
-CUR_CHUNK_REL_PATH = 'articles_imbue/webz_2008_01-2013_12'
-# CUR_CHUNK_REL_PATH = 'test_dir'
+# CUR_CHUNK_REL_PATH = 'articles_imbue/webz_2008_01-2013_12'
+CUR_CHUNK_REL_PATH = 'test_dir'
 
 
 def run(chunk_path_rel, N=10, M=5):
