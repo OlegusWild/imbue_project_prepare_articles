@@ -105,6 +105,26 @@ def collect_specific_uuids(rel_path, n, m):
         f.write(json.dumps(url_uuids))
 
 
+def collect_uuids(rel_path):
+    file_path = f'{ROOT_PATH}/repr_experiments/{rel_path}/uuids.json'
+
+    # already computed
+    if pathlib.Path(file_path).is_file():
+        print(f'Dir {file_path} already exists!')
+        return
+    
+    print(f'Creating {file_path}')
+    
+    pathlib.Path(f'{ROOT_PATH}/repr_experiments/{rel_path}').mkdir(parents=True, exist_ok=True)
+
+    uuids = []
+    for record in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
+        uuids.append(record['uuid'])
+    
+    with open(file_path, 'w') as f:
+        f.write(json.dumps(uuids))
+
+
 def get_random_samples(path_rel, dt_str, n, m):
     
     file_path = f'{ROOT_PATH}/repr_experiments/{path_rel}/{n}_{m}/{dt_str}/{m}_uuids.json'
@@ -128,6 +148,19 @@ def get_random_samples(path_rel, dt_str, n, m):
 
     with open(file_path, 'w') as f:
         f.write(json.dumps(result_uuids))
+
+
+def get_random_samples_from_all(path_rel, m, dt_str):
+    with open(f'repr_experiments/{path_rel}/uuids.json') as f:
+        uuids = json.load(f)
+        if m > len(uuids):
+            m = len(uuids)
+        m_uuids_sample = sample(uuids, m)
+
+    pathlib.Path(f'{ROOT_PATH}/repr_experiments/{path_rel}/{m}/{dt_str}').mkdir(parents=True, exist_ok=True)
+    
+    with open(f'repr_experiments/{path_rel}/{m}/{dt_str}/{m}_uuids.json', 'w') as f:
+        f.write(json.dumps(m_uuids_sample))
 
 
 def collect_m_texts_by_uuids(path_rel, dt_str, n, m):
@@ -159,7 +192,39 @@ def collect_m_texts_by_uuids(path_rel, dt_str, n, m):
             
             # getting the difference
             with open(f'repr_experiments/{path_rel}/{n}_{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_diff.txt', 'w', encoding='utf-8') as f:
-                f.writelines(compare_texts(record['text'], clean_text)) 
+                f.writelines(compare_texts(record['text'], clean_text))
+
+
+def collect_m_texts_by_uuids_from_all(path_rel, dt_str, m):
+    
+    with open(f'repr_experiments/{path_rel}/{m}/{dt_str}/{m}_uuids.json') as f:
+        target_uuids = set(json.load(f))
+    
+    url_sample_num = {}
+
+    pathlib.Path(f'{ROOT_PATH}/repr_experiments/{path_rel}/{m}/{dt_str}/results').mkdir(parents=True, exist_ok=True)
+
+    for record in get_jsonl_lines(f'{ROOT_PATH}/data/{path_rel}'):
+        
+        if record['uuid'] in target_uuids:
+        
+            url_domain = urlparse(record['url']).netloc
+            if url_domain not in url_sample_num:
+                url_sample_num[url_domain] = 1
+            else:
+                url_sample_num[url_domain] += 1
+
+            with open(f'repr_experiments/{path_rel}/{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_raw.txt', 'w', encoding='utf-8') as f:
+                f.write(record['text'])
+            
+            # applying a cleaning technique
+            with open(f'repr_experiments/{path_rel}/{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_clean.txt', 'w', encoding='utf-8') as f:
+                clean_text = get_cleaned_text(record['text'])
+                f.write(clean_text)
+            
+            # getting the difference
+            with open(f'repr_experiments/{path_rel}/{m}/{dt_str}/results/{url_domain}_{url_sample_num[url_domain]}_diff.txt', 'w', encoding='utf-8') as f:
+                f.writelines(compare_texts(record['text'], clean_text))
 
 
 def compare_texts(text1, text2):
