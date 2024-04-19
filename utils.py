@@ -44,7 +44,7 @@ def collect_urls_stat(rel_path):
     stat_dict = {}
 
     for record, _path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
-        url_domain = urlparse(record['url']).netloc
+        url_domain = extract_main_domain(record['url'])
         stat_dict[url_domain] = stat_dict.get(url_domain, 0) + 1
             
     with open(f'{file_path}', 'w') as f:
@@ -94,7 +94,7 @@ def collect_specific_uuids(rel_path, n, m):
     url_uuids = {}
 
     for record, _path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
-        url_domain = urlparse(record['url']).netloc
+        url_domain = extract_main_domain(record['url'])
 
         if url_domain in target_urls:
             if url_domain not in url_uuids:
@@ -176,7 +176,7 @@ def collect_m_texts_by_uuids(path_rel, dt_str, n, m):
         
         if record['uuid'] in target_uuids:
         
-            url_domain = urlparse(record['url']).netloc
+            url_domain = extract_main_domain(record['url'])
             if url_domain not in url_sample_num:
                 url_sample_num[url_domain] = 1
             else:
@@ -208,7 +208,7 @@ def collect_m_texts_by_uuids_from_all(path_rel, dt_str, m):
         
         if record['uuid'] in target_uuids:
         
-            url_domain = urlparse(record['url']).netloc
+            url_domain = extract_main_domain(record['url'])
             if url_domain not in url_sample_num:
                 url_sample_num[url_domain] = 1
             else:
@@ -230,6 +230,23 @@ def collect_m_texts_by_uuids_from_all(path_rel, dt_str, m):
 def compare_texts(text1, text2):
     d = Differ()
     return list(d.compare(text1.splitlines(1), text2.splitlines(1)))
+
+
+def extract_main_domain(url_str: str):
+    """
+    urls = [
+        "https://mobile.reuters.ua",
+        "https://news.reuters.uk",
+        "https://money.reuters.com"
+    ]
+    have the same main domain name reuters
+    """
+    parsed_url = urlparse(url_str)
+    domain_parts = parsed_url.netloc.split('.')
+    if len(domain_parts) >= 2:
+        return domain_parts[-2]  
+    else:
+        return domain_parts[0]
 
 
 # in MB
