@@ -20,7 +20,7 @@ def get_jsonl_lines(path):
 
             for record in reader:
 
-                yield record
+                yield record, str(path_obj)
                 progress += 1
                 if progress % 1e5 == 0:
                     print(f'{progress} processed')
@@ -43,7 +43,7 @@ def collect_urls_stat(rel_path):
 
     stat_dict = {}
 
-    for record in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
+    for record, _path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
         url_domain = urlparse(record['url']).netloc
         stat_dict[url_domain] = stat_dict.get(url_domain, 0) + 1
             
@@ -93,7 +93,7 @@ def collect_specific_uuids(rel_path, n, m):
 
     url_uuids = {}
 
-    for record in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
+    for record, _path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
         url_domain = urlparse(record['url']).netloc
 
         if url_domain in target_urls:
@@ -118,7 +118,7 @@ def collect_uuids(rel_path):
     pathlib.Path(f'{ROOT_PATH}/repr_experiments/{rel_path}').mkdir(parents=True, exist_ok=True)
 
     uuids = []
-    for record in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
+    for record, _path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{rel_path}'):
         uuids.append(record['uuid'])
     
     with open(file_path, 'w') as f:
@@ -172,7 +172,7 @@ def collect_m_texts_by_uuids(path_rel, dt_str, n, m):
 
     pathlib.Path(f'{ROOT_PATH}/repr_experiments/{path_rel}/{n}_{m}/{dt_str}/results').mkdir(parents=True, exist_ok=True)
 
-    for record in get_jsonl_lines(f'{ROOT_PATH}/data/{path_rel}'):
+    for record, _path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{path_rel}'):
         
         if record['uuid'] in target_uuids:
         
@@ -204,7 +204,7 @@ def collect_m_texts_by_uuids_from_all(path_rel, dt_str, m):
 
     pathlib.Path(f'{ROOT_PATH}/repr_experiments/{path_rel}/{m}/{dt_str}/results').mkdir(parents=True, exist_ok=True)
 
-    for record in get_jsonl_lines(f'{ROOT_PATH}/data/{path_rel}'):
+    for record, _path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{path_rel}'):
         
         if record['uuid'] in target_uuids:
         
@@ -233,27 +233,32 @@ def compare_texts(text1, text2):
 
 
 # in MB
-RESULT_CHUNK_SIZE_BYTES = 5*1e6
+RESULT_CHUNK_SIZE_BYTES = 500*1e6
 
 file_num = 1
 
 
-def write_record(record):
+def clean_and_store(chunk_rel_path):
     """
     Stores extracted and cleaned data in chunks of specified format
     """
     global file_num
 
-    with jsonlines.open(f'C:/Users/Oleg/Desktop/test_output_{file_num}.jsonl', mode='a') as writer:
+    pathlib.Path(f'{ROOT_PATH}/cleaned_data/{chunk_rel_path}').mkdir(parents=True, exist_ok=True)
 
-        writer.write({
-            'title': record['title'],
-            'url': record['url'],
-            'text': get_cleaned_text(record['text']),
-            'date_published': record['published'],
-            'uuid': record['uuid']
-        })
+    for record, path_str in get_jsonl_lines(f'{ROOT_PATH}/data/{chunk_rel_path}'):
 
-    if os.path.getsize(f'{ROOT_PATH}/cleaned_data/output_{file_num}.jsonl') > RESULT_CHUNK_SIZE_BYTES:
-        file_num += 1
+        with jsonlines.open(f'{ROOT_PATH}/cleaned_data/{chunk_rel_path}/output_{file_num}.jsonl', mode='a') as writer:
+
+            writer.write({
+                'title': record['title'],
+                'url': record['url'],
+                'text': get_cleaned_text(record['text']),
+                'date_published': record['published'],
+                'uuid': record['uuid'],
+                'file_path': path_str
+            })
+
+        if os.path.getsize(f'{ROOT_PATH}/cleaned_data/{chunk_rel_path}/output_{file_num}.jsonl') > RESULT_CHUNK_SIZE_BYTES:
+            file_num += 1
 

@@ -9,7 +9,9 @@ CUR_CHUNK_REL_PATH = 'articles_imbue/webz_2008_01-2013_12'
 
 def run(chunk_path_rel, N=10, M=10):
     """
-    Conducts representational experiment:
+    Conducts representational experiment
+
+    Option 1:
     1. Gets top N most frequent urls
     2. Gets samples of M articles for these urls and stores them at
         repr_experiments/
@@ -24,9 +26,28 @@ def run(chunk_path_rel, N=10, M=10):
                     n_most_freq_url_uuids.json
                     
                     {datetime}/
-                        random_m_samples.json
-                        url_i_raw.txt
-                        url_i_clean.txt
+                        m_uuids.json
+
+                        results/
+                            url_i_raw.txt
+                            url_i_clean.txt
+                            url_i_diff.txt
+    Option 2:
+    Collects M random uuids across all the articles in the input chunk, structure of results is similar:
+    repr_experiments/
+
+            {chunk_path}/
+
+                uuids.json
+
+                m/              
+                    {datetime}/
+                        m_uuids.json
+
+                        results/
+                            url_i_raw.txt
+                            url_i_clean.txt
+                            url_i_diff.txt
     """
     # run an experiment
     exp_datetime = dt.now().strftime("%Y-%m-%dT%H-%M-%S")
